@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ============================================================ -->
+    <!-- Movement Voucher Report -->
+    <!-- ============================================================ -->
+    <record id="action_report_move_voucher" model="ir.actions.report">
+        <field name="name">Comprobante de Movimiento</field>
+        <field name="model">treasury.cash.move</field>
+        <field name="report_type">qweb-html</field>
+        <field name="report_name">treasury_cash.report_move_voucher</field>
+        <field name="report_file">treasury_cash.report_move_voucher</field>
+        <field name="binding_model_id" ref="model_treasury_cash_move"/>
+        <field name="binding_type">report</field>
+    </record>
+
+    <!-- ============================================================ -->
+    <!-- Session Closing Report -->
+    <!-- ============================================================ -->
+    <record id="action_report_session_close" model="ir.actions.report">
+        <field name="name">Reporte de Cierre de Sesión</field>
+        <field name="model">treasury.cash.session</field>
+        <field name="report_type">qweb-html</field>
+        <field name="report_name">treasury_cash.report_session_close</field>
+        <field name="report_file">treasury_cash.report_session_close</field>
+        <field name="binding_model_id" ref="model_treasury_cash_session"/>
+        <field name="binding_type">report</field>
+    </record>
+
+</odoo>

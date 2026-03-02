@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ============================================================ -->
+    <!-- Transfer: Form View -->
+    <!-- ============================================================ -->
+    <record id="treasury_cash_transfer_view_form" model="ir.ui.view">
+        <field name="name">treasury.cash.transfer.form</field>
+        <field name="model">treasury.cash.transfer</field>
+        <field name="arch" type="xml">
+            <form string="Transferencia entre Cajas">
+                <header>
+                    <button name="action_confirm" type="object"
+                            string="Confirmar Transferencia"
+                            class="btn-primary"
+                            invisible="state != 'draft'"/>
+                    <button name="action_cancel" type="object"
+                            string="Cancelar"
+                            invisible="state != 'confirmed'"
+                            confirm="Esto revertirá el asiento contable y cancelará ambos movimientos. ¿Continuar?"/>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="draft,confirmed"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1>
+                            <field name="name"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group string="Detalle de Transferencia">
+                            <field name="source_box_id"/>
+                            <field name="dest_box_id"/>
+                            <field name="amount"/>
+                            <field name="currency_id" groups="base.group_multi_currency"/>
+                            <field name="date"/>
+                            <field name="description"/>
+                        </group>
+                        <group string="Contabilidad">
+                            <field name="bridge_account_id"
+                                   help="Deje vacío para usar la cuenta de transferencia interna predeterminada."/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                        </group>
+                    </group>
+                    <group invisible="state != 'confirmed'">
+                        <group string="Registros Vinculados">
+                            <field name="source_move_id"/>
+                            <field name="dest_move_id"/>
+                            <field name="account_move_id"/>
+                        </group>
+                    </group>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!-- ============================================================ -->
+    <!-- Transfer: List View -->
+    <!-- ============================================================ -->
+    <record id="treasury_cash_transfer_view_list" model="ir.ui.view">
+        <field name="name">treasury.cash.transfer.list</field>
+        <field name="model">treasury.cash.transfer</field>
+        <field name="arch" type="xml">
+            <list string="Transferencias entre Cajas"
+                  decoration-muted="state == 'cancelled'"
+                  decoration-success="state == 'confirmed'">
+                <field name="name"/>
+                <field name="date"/>
+                <field name="source_box_id"/>
+                <field name="dest_box_id"/>
+                <field name="amount" widget="monetary" sum="Total"/>
+                <field name="currency_id" column_invisible="True"/>
+                <field name="description"/>
+                <field name="state" widget="badge"
+                       decoration-success="state == 'confirmed'"
+                       decoration-info="state == 'draft'"
+                       decoration-danger="state == 'cancelled'"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- ============================================================ -->
+    <!-- Transfer: Search View -->
+    <!-- ============================================================ -->
+    <record id="treasury_cash_transfer_view_search" model="ir.ui.view">
+        <field name="name">treasury.cash.transfer.search</field>
+        <field name="model">treasury.cash.transfer</field>
+        <field name="arch" type="xml">
+            <search string="Transferencias entre Cajas">
+                <field name="name"/>
+                <field name="source_box_id"/>
+                <field name="dest_box_id"/>
+                <filter string="Borrador" name="filter_draft" domain="[('state', '=', 'draft')]"/>
+                <filter string="Confirmadas" name="filter_confirmed" domain="[('state', '=', 'confirmed')]"/>
+                <filter string="Canceladas" name="filter_cancelled" domain="[('state', '=', 'cancelled')]"/>
+                <separator/>
+                <filter string="Hoy" name="filter_today" date="date"/>
+                <filter string="Este Mes" name="filter_month" date="date"/>
+                <group>
+                    <filter string="Origen" name="group_source" context="{'group_by': 'source_box_id'}"/>
+                    <filter string="Destino" name="group_dest" context="{'group_by': 'dest_box_id'}"/>
+                    <filter string="Estado" name="group_state" context="{'group_by': 'state'}"/>
+                    <filter string="Fecha" name="group_date" context="{'group_by': 'date:day'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- ============================================================ -->
+    <!-- Transfer: Action -->
+    <!-- ============================================================ -->
+    <record id="treasury_cash_transfer_action" model="ir.actions.act_window">
+        <field name="name">Transferencias</field>
+        <field name="res_model">treasury.cash.transfer</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="treasury_cash_transfer_view_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Cree una transferencia entre cajas
+            </p>
+            <p>
+                Las transferencias mueven fondos atómicamente entre dos cajas usando una cuenta puente.
+            </p>
+        </field>
+    </record>
+
+</odoo>

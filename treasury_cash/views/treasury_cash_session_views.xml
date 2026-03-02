@@ -1,0 +1,258 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ============================================================ -->
+    <!-- Session: Form View -->
+    <!-- ============================================================ -->
+    <record id="treasury_cash_session_view_form" model="ir.ui.view">
+        <field name="name">treasury.cash.session.form</field>
+        <field name="model">treasury.cash.session</field>
+        <field name="arch" type="xml">
+            <form string="Sesión de Caja" class="oe_chatter_position_sided">
+                <header>
+                    <button name="action_validate_opening" type="object"
+                            string="Abrir Sesión"
+                            class="btn-primary"
+                            invisible="state != 'opening_control'"/>
+                    <button name="action_start_closing" type="object"
+                            string="Iniciar Cierre"
+                            class="btn-primary"
+                            invisible="state != 'opened'"
+                            confirm="¿Está seguro de que desea iniciar el cierre de esta sesión?"/>
+                    <button name="action_close" type="object"
+                            string="Cerrar y Contabilizar"
+                            class="btn-primary"
+                            invisible="state != 'closing_control'"/>
+                    <button name="action_reopen" type="object"
+                            string="Reabrir"
+                            invisible="state != 'closing_control'"/>
+                    <button name="action_print_closing_report" type="object"
+                            string="Imprimir Reporte de Cierre"
+                            invisible="state != 'closed'"/>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="opening_control,opened,closing_control,closed"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_moves" type="object"
+                                class="oe_stat_button" icon="fa-exchange"
+                                invisible="state == 'opening_control'">
+                            <field name="move_count" widget="statinfo" string="Movimientos"/>
+                        </button>
+                    </div>
+                    <widget name="web_ribbon" title="Bloqueada" bg_color="text-bg-secondary"
+                            invisible="not is_locked"/>
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1>
+                            <field name="name"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group string="Información de Sesión">
+                            <field name="box_id"/>
+                            <field name="user_id" widget="many2one_avatar_user"/>
+                            <field name="closed_by_id" widget="many2one_avatar_user"
+                                   invisible="state != 'closed'"/>
+                            <field name="start_at"/>
+                            <field name="stop_at" invisible="state in ('opening_control', 'opened')"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                            <field name="currency_id" groups="base.group_multi_currency"/>
+                        </group>
+                        <group string="Saldos" invisible="state == 'opening_control'">
+                            <field name="opening_balance" widget="monetary"/>
+                            <field name="total_income" widget="monetary" class="text-success"/>
+                            <field name="total_expense" widget="monetary" class="text-danger"/>
+                            <field name="closing_balance_theoretical" widget="monetary"/>
+                            <field name="closing_balance_real" widget="monetary"
+                                   invisible="state in ('opening_control', 'opened')"
+                                   readonly="state == 'closed'"/>
+                            <field name="difference" widget="monetary"
+                                   invisible="state in ('opening_control', 'opened')"
+                                   decoration-danger="difference != 0"/>
+                        </group>
+                    </group>
+
+                    <notebook>
+                        <!-- Opening: Cashbox lines per currency -->
+                        <page string="Apertura" name="opening"
+                              invisible="state != 'opening_control'">
+                            <field name="cashbox_ids">
+                                <list editable="bottom">
+                                    <field name="currency_id" readonly="1"/>
+                                    <field name="suggested_opening" widget="monetary"/>
+                                    <field name="opening_amount" widget="monetary"/>
+                                    <button name="action_count_bills" type="object"
+                                            string="Contar Billetes" icon="fa-calculator"
+                                            class="btn-link"/>
+                                </list>
+                            </field>
+                            <group>
+                                <field name="opening_notes" placeholder="Notas de apertura..."/>
+                            </group>
+                        </page>
+                        <!-- Cajas por Divisa (visible after opening) — each opens its own form with moves -->
+                        <page string="Cajas / Movimientos" name="cashbox_moves"
+                              invisible="state == 'opening_control'">
+                            <field name="cashbox_ids" readonly="state == 'closed'">
+                                <list>
+                                    <field name="currency_id" readonly="1"/>
+                                    <field name="opening_amount" readonly="1"/>
+                                    <field name="total_income" class="text-success"/>
+                                    <field name="total_expense" class="text-danger"/>
+                                    <field name="closing_amount_theoretical" readonly="1"/>
+                                    <field name="move_count" string="Movimientos"/>
+                                    <button name="action_open_cashbox" type="object"
+                                            string="Abrir" icon="fa-external-link"
+                                            class="btn-link"/>
+                                </list>
+                            </field>
+                        </page>
+                        <!-- Closing: Cashbox lines per currency -->
+                        <page string="Cierre" name="closing"
+                              invisible="state in ('opening_control', 'opened')">
+                            <div class="o_form_label text-muted">
+                                Realice el conteo final por divisa. El sistema compara el contado contra el saldo teórico esperado.
+                            </div>
+                            <field name="cashbox_ids"
+                                   readonly="state == 'closed'">
+                                <list editable="bottom">
+                                    <field name="currency_id" readonly="1"/>
+                                    <field name="opening_amount" widget="monetary" readonly="1"/>
+                                    <field name="closing_amount_theoretical" widget="monetary" readonly="1"/>
+                                    <field name="closing_amount" widget="monetary"/>
+                                    <field name="difference" widget="monetary"
+                                           decoration-danger="difference &lt; 0"
+                                           decoration-success="difference &gt; 0"/>
+                                    <button name="action_count_bills" type="object"
+                                            string="Contar Billetes" icon="fa-calculator"
+                                            class="btn-link"
+                                            invisible="state == 'closed'"/>
+                                </list>
+                            </field>
+                            <group>
+                                <group>
+                                    <field name="difference_justification"
+                                           placeholder="Explique la diferencia..."
+                                           readonly="state == 'closed'"/>
+                                </group>
+                                <group>
+                                    <field name="closing_account_move_id"
+                                           invisible="not closing_account_move_id"/>
+                                    <field name="integrity_hash"
+                                           invisible="not integrity_hash"
+                                           groups="base.group_no_one"/>
+                                </group>
+                            </group>
+                        </page>
+                        <!-- Notes -->
+                        <page string="Notas" name="notes"
+                              invisible="state == 'opening_control'">
+                            <group>
+                                <field name="opening_notes" placeholder="Notas de apertura..."
+                                       readonly="state == 'closed'"/>
+                                <field name="closing_notes" placeholder="Notas de cierre..."
+                                       readonly="state not in ('closing_control',)"
+                                       invisible="state in ('opening_control', 'opened')"/>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!-- ============================================================ -->
+    <!-- Session: List View -->
+    <!-- ============================================================ -->
+    <record id="treasury_cash_session_view_list" model="ir.ui.view">
+        <field name="name">treasury.cash.session.list</field>
+        <field name="model">treasury.cash.session</field>
+        <field name="arch" type="xml">
+            <list string="Sesiones de Caja"
+                  decoration-info="state == 'opened'"
+                  decoration-warning="state == 'closing_control'"
+                  decoration-muted="state == 'closed'">
+                <field name="name"/>
+                <field name="box_id"/>
+                <field name="user_id" widget="many2one_avatar_user"/>
+                <field name="start_at"/>
+                <field name="stop_at"/>
+                <field name="opening_balance" widget="monetary"/>
+                <field name="closing_balance_theoretical" widget="monetary" optional="show"/>
+                <field name="closing_balance_real" widget="monetary" optional="show"/>
+                <field name="difference" widget="monetary"
+                       decoration-danger="difference != 0"/>
+                <field name="currency_id" column_invisible="True"/>
+                <field name="move_count"/>
+                <field name="state" widget="badge"
+                       decoration-success="state == 'closed'"
+                       decoration-info="state == 'opened'"
+                       decoration-warning="state == 'closing_control'"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- ============================================================ -->
+    <!-- Session: Search View -->
+    <!-- ============================================================ -->
+    <record id="treasury_cash_session_view_search" model="ir.ui.view">
+        <field name="name">treasury.cash.session.search</field>
+        <field name="model">treasury.cash.session</field>
+        <field name="arch" type="xml">
+            <search string="Sesiones de Caja">
+                <field name="name"/>
+                <field name="box_id"/>
+                <field name="user_id"/>
+                <filter string="En Progreso" name="filter_opened" domain="[('state', '=', 'opened')]"/>
+                <filter string="Control de Cierre" name="filter_closing" domain="[('state', '=', 'closing_control')]"/>
+                <filter string="Cerradas" name="filter_closed" domain="[('state', '=', 'closed')]"/>
+                <separator/>
+                <filter string="Con Diferencias" name="filter_differences" domain="[('difference', '!=', 0)]"/>
+                <separator/>
+                <filter string="Hoy" name="filter_today" date="start_at"/>
+                <filter string="Esta Semana" name="filter_week" date="start_at"/>
+                <filter string="Este Mes" name="filter_month" date="start_at"/>
+                <group>
+                    <filter string="Caja" name="group_box" context="{'group_by': 'box_id'}"/>
+                    <filter string="Abierta por" name="group_user" context="{'group_by': 'user_id'}"/>
+                    <filter string="Estado" name="group_state" context="{'group_by': 'state'}"/>
+                    <filter string="Fecha de Apertura" name="group_date" context="{'group_by': 'start_at:day'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- ============================================================ -->
+    <!-- Session: Actions -->
+    <!-- ============================================================ -->
+    <record id="treasury_cash_session_action" model="ir.actions.act_window">
+        <field name="name">Sesiones</field>
+        <field name="res_model">treasury.cash.session</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="treasury_cash_session_view_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Aún no hay sesiones
+            </p>
+            <p>
+                Abra una sesión desde una Caja para comenzar a registrar movimientos.
+            </p>
+        </field>
+    </record>
+
+    <record id="treasury_cash_session_action_current" model="ir.actions.act_window">
+        <field name="name">Sesiones Actuales</field>
+        <field name="res_model">treasury.cash.session</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="treasury_cash_session_view_search"/>
+        <field name="domain">[('state', 'not in', ['closed'])]</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No hay sesiones abiertas
+            </p>
+        </field>
+    </record>
+
+</odoo>

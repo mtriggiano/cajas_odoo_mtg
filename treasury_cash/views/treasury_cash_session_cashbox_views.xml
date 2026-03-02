@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ============================================================ -->
+    <!-- Cashbox: Full Form (with moves) -->
+    <!-- ============================================================ -->
+    <record id="treasury_cash_session_cashbox_view_form" model="ir.ui.view">
+        <field name="name">treasury.cash.session.cashbox.form</field>
+        <field name="model">treasury.cash.session.cashbox</field>
+        <field name="arch" type="xml">
+            <form string="Caja por Divisa">
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="currency_id" readonly="1" options="{'no_open': True}"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group string="Saldos">
+                            <field name="opening_amount" widget="monetary" readonly="1"/>
+                            <field name="closing_amount_theoretical" widget="monetary"/>
+                            <field name="total_income" widget="monetary" class="text-success"/>
+                            <field name="total_expense" widget="monetary" class="text-danger"/>
+                        </group>
+                        <group string="Cierre" invisible="state in ('opening_control', 'opened')">
+                            <field name="closing_amount" widget="monetary"
+                                   readonly="state == 'closed'"/>
+                            <field name="difference" widget="monetary"
+                                   decoration-danger="difference != 0"/>
+                            <button name="action_count_bills" type="object"
+                                    string="Contar Billetes" icon="fa-calculator"
+                                    class="btn-link"
+                                    invisible="state == 'closed'"/>
+                        </group>
+                    </group>
+                    <field name="state" invisible="1"/>
+                    <field name="session_id" invisible="1"/>
+                    <notebook>
+                        <page string="Movimientos" name="moves">
+                            <field name="move_ids"
+                                   readonly="state == 'closed'"
+                                   context="{'default_session_id': session_id, 'default_cashbox_id': id, 'default_currency_id': currency_id}">
+                                <list editable="bottom" decoration-muted="state == 'cancelled'">
+                                    <field name="name" readonly="1"/>
+                                    <field name="date"/>
+                                    <field name="move_type"/>
+                                    <field name="description"/>
+                                    <field name="partner_id" optional="show"/>
+                                    <field name="account_id" optional="show"/>
+                                    <field name="amount"
+                                           decoration-success="move_type in ('income', 'transfer_in', 'bank_withdrawal')"
+                                           decoration-danger="move_type in ('expense', 'transfer_out', 'supplier_payment', 'bank_deposit')"/>
+                                    <field name="currency_id" column_invisible="True"/>
+                                    <field name="session_id" column_invisible="True"/>
+                                    <field name="state" widget="badge"
+                                           decoration-success="state == 'posted'"
+                                           decoration-info="state == 'draft'"
+                                           decoration-danger="state == 'cancelled'"/>
+                                    <button name="action_post" type="object"
+                                            string="Contabilizar" icon="fa-check"
+                                            class="btn-link text-success"
+                                            invisible="state != 'draft'"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- ============================================================ -->
+    <!-- Cashbox: Bill Counting Popup Form -->
+    <!-- ============================================================ -->
+    <record id="treasury_cash_session_cashbox_count_form" model="ir.ui.view">
+        <field name="name">treasury.cash.session.cashbox.count.form</field>
+        <field name="model">treasury.cash.session.cashbox</field>
+        <field name="arch" type="xml">
+            <form string="Conteo de Billetes">
+                <group>
+                    <group>
+                        <field name="currency_id" readonly="1"/>
+                    </group>
+                    <group>
+                        <field name="denomination_total" widget="monetary"/>
+                    </group>
+                </group>
+                <field name="denomination_ids">
+                    <list editable="bottom">
+                        <field name="currency_id" column_invisible="True"/>
+                        <field name="denomination" readonly="1"/>
+                        <field name="quantity"/>
+                        <field name="subtotal"/>
+                    </list>
+                </field>
+                <footer>
+                    <button name="action_apply_count" type="object"
+                            string="Aplicar Total" class="btn-primary"/>
+                    <button string="Cancelar" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+</odoo>

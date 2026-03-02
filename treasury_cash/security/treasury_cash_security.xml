@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Module Category -->
+    <record id="module_category_treasury" model="ir.module.category">
+        <field name="name">Tesorería</field>
+        <field name="description">Operaciones de Caja y Gestión de Tesorería</field>
+        <field name="sequence">20</field>
+    </record>
+
+    <!-- ============================================================ -->
+    <!-- Privilege (Odoo 19 pattern — created before groups) -->
+    <!-- ============================================================ -->
+    <record id="res_groups_privilege_treasury" model="res.groups.privilege">
+        <field name="name">Tesorería</field>
+        <field name="sequence">45</field>
+        <field name="category_id" ref="module_category_treasury"/>
+    </record>
+
+    <!-- ============================================================ -->
+    <!-- Groups (reference privilege_id) -->
+    <!-- ============================================================ -->
+
+    <!-- Auditor: read-only access -->
+    <record id="group_treasury_auditor" model="res.groups">
+        <field name="name">Auditor</field>
+        <field name="sequence">5</field>
+        <field name="privilege_id" ref="res_groups_privilege_treasury"/>
+        <field name="comment">Acceso de solo lectura a todos los datos de tesorería para auditoría.</field>
+    </record>
+
+    <!-- User: cash box operator (limited to assigned boxes) -->
+    <record id="group_treasury_user" model="res.groups">
+        <field name="name">Operador de Caja</field>
+        <field name="sequence">10</field>
+        <field name="privilege_id" ref="res_groups_privilege_treasury"/>
+        <field name="implied_ids" eval="[(4, ref('group_treasury_auditor'))]"/>
+        <field name="comment">Puede operar las cajas asignadas: abrir sesiones, registrar movimientos, cerrar sesiones.</field>
+    </record>
+
+    <!-- Manager: full access to all boxes -->
+    <record id="group_treasury_manager" model="res.groups">
+        <field name="name">Tesorero</field>
+        <field name="sequence">20</field>
+        <field name="privilege_id" ref="res_groups_privilege_treasury"/>
+        <field name="implied_ids" eval="[(4, ref('group_treasury_user'))]"/>
+        <field name="comment">Acceso completo a todas las cajas, puede aprobar movimientos, configurar cajas y ver todos los datos.</field>
+        <field name="user_ids" eval="[(4, ref('base.user_root')), (4, ref('base.user_admin'))]"/>
+    </record>
+
+    <!-- ============================================================ -->
+    <!-- Record Rules -->
+    <!-- ============================================================ -->
+    <data noupdate="1">
+
+    <!-- Cash Box: Operator sees only their assigned boxes -->
+    <record id="rule_cash_box_user" model="ir.rule">
+        <field name="name">Cash Box: Operator — own boxes</field>
+        <field name="model_id" ref="model_treasury_cash_box"/>
+        <field name="domain_force">[('responsible_user_id', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('group_treasury_user'))]"/>
+    </record>
+
+    <!-- Cash Box: Manager sees all boxes in company -->
+    <record id="rule_cash_box_manager" model="ir.rule">
+        <field name="name">Cash Box: Manager — all company boxes</field>
+        <field name="model_id" ref="model_treasury_cash_box"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+        <field name="groups" eval="[(4, ref('group_treasury_manager'))]"/>
+    </record>
+
+    <!-- Session: Operator sees only sessions of their boxes -->
+    <record id="rule_cash_session_user" model="ir.rule">
+        <field name="name">Session: Operator — own box sessions</field>
+        <field name="model_id" ref="model_treasury_cash_session"/>
+        <field name="domain_force">[('box_id.responsible_user_id', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('group_treasury_user'))]"/>
+    </record>
+
+    <!-- Session: Manager sees all -->
+    <record id="rule_cash_session_manager" model="ir.rule">
+        <field name="name">Session: Manager — all company sessions</field>
+        <field name="model_id" ref="model_treasury_cash_session"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+        <field name="groups" eval="[(4, ref('group_treasury_manager'))]"/>
+    </record>
+
+    <!-- Move: Operator sees only moves of their boxes -->
+    <record id="rule_cash_move_user" model="ir.rule">
+        <field name="name">Move: Operator — own box moves</field>
+        <field name="model_id" ref="model_treasury_cash_move"/>
+        <field name="domain_force">[('box_id.responsible_user_id', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('group_treasury_user'))]"/>
+    </record>
+
+    <!-- Move: Manager sees all -->
+    <record id="rule_cash_move_manager" model="ir.rule">
+        <field name="name">Move: Manager — all company moves</field>
+        <field name="model_id" ref="model_treasury_cash_move"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+        <field name="groups" eval="[(4, ref('group_treasury_manager'))]"/>
+    </record>
+
+    <!-- Transfer: Manager only -->
+    <record id="rule_cash_transfer_manager" model="ir.rule">
+        <field name="name">Transfer: Manager — all company transfers</field>
+        <field name="model_id" ref="model_treasury_cash_transfer"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+        <field name="groups" eval="[(4, ref('group_treasury_manager'))]"/>
+    </record>
+
+    <!-- Transfer: Operator sees transfers involving their boxes -->
+    <record id="rule_cash_transfer_user" model="ir.rule">
+        <field name="name">Transfer: Operator — own box transfers</field>
+        <field name="model_id" ref="model_treasury_cash_transfer"/>
+        <field name="domain_force">['|', ('source_box_id.responsible_user_id', '=', user.id), ('dest_box_id.responsible_user_id', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('group_treasury_user'))]"/>
+    </record>
+
+    <!-- Auditor: read-only on all models (company scoped) -->
+    <record id="rule_cash_box_auditor" model="ir.rule">
+        <field name="name">Cash Box: Auditor — read all company</field>
+        <field name="model_id" ref="model_treasury_cash_box"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+        <field name="groups" eval="[(4, ref('group_treasury_auditor'))]"/>
+        <field name="perm_write" eval="False"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+
+    <record id="rule_cash_session_auditor" model="ir.rule">
+        <field name="name">Session: Auditor — read all company</field>
+        <field name="model_id" ref="model_treasury_cash_session"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+        <field name="groups" eval="[(4, ref('group_treasury_auditor'))]"/>
+        <field name="perm_write" eval="False"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+
+    <record id="rule_cash_move_auditor" model="ir.rule">
+        <field name="name">Move: Auditor — read all company</field>
+        <field name="model_id" ref="model_treasury_cash_move"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+        <field name="groups" eval="[(4, ref('group_treasury_auditor'))]"/>
+        <field name="perm_write" eval="False"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+
+    <record id="rule_cash_transfer_auditor" model="ir.rule">
+        <field name="name">Transfer: Auditor — read all company</field>
+        <field name="model_id" ref="model_treasury_cash_transfer"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+        <field name="groups" eval="[(4, ref('group_treasury_auditor'))]"/>
+        <field name="perm_write" eval="False"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+
+    </data>
+</odoo>

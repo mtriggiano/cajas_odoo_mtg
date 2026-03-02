@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ============================================================ -->
+    <!-- Dashboard Action (uses kanban view of cash boxes) -->
+    <!-- ============================================================ -->
+    <record id="treasury_cash_dashboard_action" model="ir.actions.act_window">
+        <field name="name">Panel de Tesorería</field>
+        <field name="res_model">treasury.cash.box</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="search_view_id" ref="treasury_cash_box_view_search"/>
+        <field name="context">{'search_default_filter_active': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Bienvenido a Operaciones de Caja
+            </p>
+            <p>
+                Cree su primera Caja para comenzar. Use el Asistente Rápido
+                para la configuración automática de cuentas, diarios y secuencias.
+            </p>
+        </field>
+    </record>
+
+</odoo>

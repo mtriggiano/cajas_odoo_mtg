@@ -1,0 +1,62 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Build / packaging
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Test / coverage
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+
+# Type checker / linter caches
+.mypy_cache/
+.pyre/
+.ruff_cache/
+
+# Odoo generated / runtime
+*.log
+*.pid
+*.pid.lock
+*.db
+filestore/
+sessions/
+
+# Odoo translation artifacts (keep source .po if manually maintained)
+*.pot
+
+# IDE / editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Local env/config secrets
+.env
+.env.*
+*.secret
+
+# Backup files
+*.bak
+*.tmp
+*.orig

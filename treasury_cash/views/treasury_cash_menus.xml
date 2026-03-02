@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ============================================================ -->
+    <!-- Root Menu -->
+    <!-- ============================================================ -->
+    <menuitem id="menu_treasury_root"
+              name="Tesorería"
+              web_icon="treasury_cash,static/description/icon.png"
+              sequence="45"/>
+
+    <!-- ============================================================ -->
+    <!-- Dashboard -->
+    <!-- ============================================================ -->
+    <menuitem id="menu_treasury_dashboard"
+              name="Panel"
+              parent="menu_treasury_root"
+              action="treasury_cash_dashboard_action"
+              sequence="1"/>
+
+    <!-- ============================================================ -->
+    <!-- Operations -->
+    <!-- ============================================================ -->
+    <menuitem id="menu_treasury_operations"
+              name="Operaciones"
+              parent="menu_treasury_root"
+              sequence="10"/>
+
+    <menuitem id="menu_treasury_cash_boxes"
+              name="Cajas"
+              parent="menu_treasury_operations"
+              action="treasury_cash_box_action"
+              sequence="10"/>
+
+    <menuitem id="menu_treasury_sessions_current"
+              name="Sesiones Actuales"
+              parent="menu_treasury_operations"
+              action="treasury_cash_session_action_current"
+              sequence="20"/>
+
+    <menuitem id="menu_treasury_sessions_all"
+              name="Todas las Sesiones"
+              parent="menu_treasury_operations"
+              action="treasury_cash_session_action"
+              sequence="25"/>
+
+    <menuitem id="menu_treasury_moves"
+              name="Movimientos"
+              parent="menu_treasury_operations"
+              action="treasury_cash_move_action"
+              sequence="30"/>
+
+    <menuitem id="menu_treasury_transfers"
+              name="Transferencias"
+              parent="menu_treasury_operations"
+              action="treasury_cash_transfer_action"
+              sequence="40"/>
+
+    <!-- ============================================================ -->
+    <!-- Configuration -->
+    <!-- ============================================================ -->
+    <menuitem id="menu_treasury_config"
+              name="Configuración"
+              parent="menu_treasury_root"
+              sequence="90"
+              groups="group_treasury_manager"/>
+
+    <menuitem id="menu_treasury_config_boxes"
+              name="Cajas"
+              parent="menu_treasury_config"
+              action="treasury_cash_box_action"
+              sequence="10"/>
+
+    <menuitem id="menu_treasury_config_bills"
+              name="Billetes/Monedas"
+              parent="menu_treasury_config"
+              action="treasury_cash_bill_action"
+              sequence="15"/>
+
+    <menuitem id="menu_treasury_config_quickstart"
+              name="Asistente Rápido"
+              parent="menu_treasury_config"
+              action="treasury_cash_quickstart_action"
+              sequence="20"/>
+
+</odoo>

@@ -1,0 +1,231 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <template id="report_session_close">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-call="web.external_layout">
+                    <div class="page">
+                        <h2 class="text-center mb-2">
+                            Reporte de Cierre de Sesión
+                        </h2>
+                        <h4 class="text-center text-muted mb-4">
+                            <t t-esc="o.name"/>
+                        </h4>
+
+                        <!-- Session Info -->
+                        <div class="row mb-4">
+                            <div class="col-6">
+                                <table class="table table-sm table-borderless">
+                                    <tr>
+                                        <td class="fw-bold">Caja:</td>
+                                        <td><t t-esc="o.box_id.name"/></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="fw-bold">Abierta por:</td>
+                                        <td><t t-esc="o.user_id.name"/></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="fw-bold">Cerrada por:</td>
+                                        <td><t t-esc="o.closed_by_id.name" t-if="o.closed_by_id"/></td>
+                                    </tr>
+                                </table>
+                            </div>
+                            <div class="col-6">
+                                <table class="table table-sm table-borderless">
+                                    <tr>
+                                        <td class="fw-bold">Apertura:</td>
+                                        <td><t t-esc="o.start_at" t-options="{'widget': 'datetime'}"/></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="fw-bold">Cierre:</td>
+                                        <td><t t-esc="o.stop_at" t-options="{'widget': 'datetime'}"/></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="fw-bold">Estado:</td>
+                                        <td><t t-esc="o.state"/></td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Balance Summary by Currency -->
+                        <h5 class="mb-2">Resumen por Divisa</h5>
+                        <table class="table table-bordered table-sm">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Divisa</th>
+                                    <th class="text-end">Saldo Inicial</th>
+                                    <th class="text-end text-success">Ingresos</th>
+                                    <th class="text-end text-danger">Egresos</th>
+                                    <th class="text-end">Teórico Cierre</th>
+                                    <th class="text-end">Real Cierre</th>
+                                    <th class="text-end">Diferencia</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-foreach="o.cashbox_ids.sorted(key=lambda cb: cb.currency_id.name)" t-as="cb">
+                                    <tr t-attf-class="#{'table-danger fw-bold' if not cb.currency_id.is_zero(cb.difference) else ''}">
+                                        <td><t t-esc="cb.currency_id.name"/></td>
+                                        <td class="text-end">
+                                            <t t-esc="cb.opening_amount" t-options="{'widget': 'monetary', 'display_currency': cb.currency_id}"/>
+                                        </td>
+                                        <td class="text-end text-success">
+                                            <t t-esc="cb.total_income" t-options="{'widget': 'monetary', 'display_currency': cb.currency_id}"/>
+                                        </td>
+                                        <td class="text-end text-danger">
+                                            <t t-esc="cb.total_expense" t-options="{'widget': 'monetary', 'display_currency': cb.currency_id}"/>
+                                        </td>
+                                        <td class="text-end">
+                                            <t t-esc="cb.closing_amount_theoretical" t-options="{'widget': 'monetary', 'display_currency': cb.currency_id}"/>
+                                        </td>
+                                        <td class="text-end">
+                                            <t t-esc="cb.closing_amount" t-options="{'widget': 'monetary', 'display_currency': cb.currency_id}"/>
+                                        </td>
+                                        <td class="text-end">
+                                            <t t-esc="cb.difference" t-options="{'widget': 'monetary', 'display_currency': cb.currency_id}"/>
+                                        </td>
+                                    </tr>
+                                </t>
+                            </tbody>
+                        </table>
+
+                        <!-- Difference Justification -->
+                        <div t-if="o.cashbox_ids.filtered(lambda cb: not cb.currency_id.is_zero(cb.difference)) and o.difference_justification" class="mb-4">
+                            <h5>Justificación de Diferencia</h5>
+                            <p class="border p-2"><t t-esc="o.difference_justification"/></p>
+                        </div>
+
+                        <!-- Cash Count (Denominations by Currency) -->
+                        <div t-if="o.cashbox_ids.filtered(lambda cb: cb.denomination_ids)" class="mb-4">
+                            <h5>Arqueo</h5>
+                            <t t-foreach="o.cashbox_ids.sorted(key=lambda cb: cb.currency_id.name)" t-as="cb">
+                                <div t-if="cb.denomination_ids" class="mb-3">
+                                    <h6>
+                                        <t t-esc="cb.currency_id.name"/>
+                                    </h6>
+                                    <table class="table table-bordered table-sm">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Denominación</th>
+                                                <th class="text-end">Cantidad</th>
+                                                <th class="text-end">Subtotal</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <t t-foreach="cb.denomination_ids" t-as="d">
+                                                <tr>
+                                                    <td><t t-esc="d.denomination"/></td>
+                                                    <td class="text-end"><t t-esc="d.quantity"/></td>
+                                                    <td class="text-end">
+                                                        <t t-esc="d.subtotal" t-options="{'widget': 'monetary', 'display_currency': cb.currency_id}"/>
+                                                    </td>
+                                                </tr>
+                                            </t>
+                                        </tbody>
+                                        <tfoot>
+                                            <tr class="fw-bold">
+                                                <td colspan="2">Total Contado</td>
+                                                <td class="text-end">
+                                                    <t t-esc="sum(cb.denomination_ids.mapped('subtotal'))" t-options="{'widget': 'monetary', 'display_currency': cb.currency_id}"/>
+                                                </td>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
+                            </t>
+                        </div>
+
+                        <!-- Movements Detail by Currency -->
+                        <h5 class="mb-2">Detalle de Movimientos por Divisa</h5>
+                        <t t-foreach="o.cashbox_ids.sorted(key=lambda cb: cb.currency_id.name)" t-as="cb">
+                            <div class="mt-3 mb-1">
+                                <strong><t t-esc="cb.currency_id.name"/></strong>
+                                <span class="text-muted">- Movimientos: <t t-esc="len(cb.move_ids)"/></span>
+                            </div>
+                            <table class="table table-bordered table-sm">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Fecha</th>
+                                        <th>Número</th>
+                                        <th>Tipo</th>
+                                        <th>Descripción</th>
+                                        <th>Contacto</th>
+                                        <th>Cuenta</th>
+                                        <th class="text-end">Monto</th>
+                                        <th>Estado</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-if="cb.move_ids">
+                                        <t t-foreach="cb.move_ids.sorted(key=lambda m: (m.date, m.id))" t-as="m">
+                                            <tr t-attf-class="#{'text-muted' if m.state == 'cancelled' else ''}">
+                                                <td><t t-esc="m.date" t-options="{'widget': 'date'}"/></td>
+                                                <td><t t-esc="m.name"/></td>
+                                                <td>
+                                                    <t t-if="m.move_type == 'income'">Ingreso</t>
+                                                    <t t-elif="m.move_type == 'expense'">Egreso</t>
+                                                    <t t-elif="m.move_type == 'transfer_out'">Transferencia Salida</t>
+                                                    <t t-elif="m.move_type == 'transfer_in'">Transferencia Entrada</t>
+                                                    <t t-elif="m.move_type == 'supplier_payment'">Pago a Proveedor</t>
+                                                    <t t-elif="m.move_type == 'bank_deposit'">Depósito Bancario</t>
+                                                    <t t-elif="m.move_type == 'bank_withdrawal'">Retiro Bancario</t>
+                                                    <t t-elif="m.move_type == 'adjustment'">Ajuste</t>
+                                                </td>
+                                                <td><t t-esc="m.description"/></td>
+                                                <td><t t-esc="m.partner_id.name" t-if="m.partner_id"/></td>
+                                                <td><t t-esc="m.account_id.display_name"/></td>
+                                                <td class="text-end">
+                                                    <t t-esc="m.amount" t-options="{'widget': 'monetary', 'display_currency': cb.currency_id}"/>
+                                                </td>
+                                                <td><t t-esc="m.state"/></td>
+                                            </tr>
+                                        </t>
+                                    </t>
+                                    <t t-else="">
+                                        <tr>
+                                            <td colspan="8" class="text-center text-muted">Sin movimientos en esta divisa.</td>
+                                        </tr>
+                                    </t>
+                                </tbody>
+                            </table>
+                        </t>
+
+                        <!-- Notes -->
+                        <div t-if="o.opening_notes or o.closing_notes" class="mt-4">
+                            <h5>Notas</h5>
+                            <div t-if="o.opening_notes" class="mb-2">
+                                <strong>Apertura:</strong>
+                                <p><t t-esc="o.opening_notes"/></p>
+                            </div>
+                            <div t-if="o.closing_notes">
+                                <strong>Cierre:</strong>
+                                <p><t t-esc="o.closing_notes"/></p>
+                            </div>
+                        </div>
+
+                        <!-- Integrity Hash -->
+                        <div t-if="o.integrity_hash" class="mt-4 text-muted small">
+                            <strong>Hash de Integridad (SHA-256):</strong>
+                            <span class="font-monospace"><t t-esc="o.integrity_hash"/></span>
+                        </div>
+
+                        <!-- Signatures -->
+                        <div class="row mt-5">
+                            <div class="col-4 text-center">
+                                <div class="border-top pt-2">Operador de Caja</div>
+                            </div>
+                            <div class="col-4 text-center">
+                                <div class="border-top pt-2">Tesorero</div>
+                            </div>
+                            <div class="col-4 text-center">
+                                <div class="border-top pt-2">Auditor</div>
+                            </div>
+                        </div>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+
+</odoo>

@@ -1,0 +1,233 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ============================================================ -->
+    <!-- Cash Box: Form View -->
+    <!-- ============================================================ -->
+    <record id="treasury_cash_box_view_form" model="ir.ui.view">
+        <field name="name">treasury.cash.box.form</field>
+        <field name="model">treasury.cash.box</field>
+        <field name="arch" type="xml">
+            <form string="Caja">
+                <header>
+                    <button name="action_activate" type="object" string="Activar"
+                            class="btn-primary"
+                            invisible="state != 'draft'"/>
+                    <button name="action_new_session" type="object" string="Abrir Sesión"
+                            class="btn-primary"
+                            invisible="state != 'active' or current_session_id"/>
+                    <button name="action_suspend" type="object" string="Suspender"
+                            invisible="state != 'active'"
+                            confirm="¿Está seguro de que desea suspender esta caja?"/>
+                    <button name="action_reset_draft" type="object" string="Restablecer a Borrador"
+                            invisible="state != 'suspended'"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,active"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_open_sessions" type="object"
+                                class="oe_stat_button" icon="fa-calendar">
+                            <field name="session_count" widget="statinfo" string="Sesiones"/>
+                        </button>
+                    </div>
+                    <widget name="web_ribbon" title="Suspendida" bg_color="text-bg-danger"
+                            invisible="state != 'suspended'"/>
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1>
+                            <field name="name" placeholder="ej. Tesorería General"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group string="Configuración">
+                            <field name="code"/>
+                            <field name="box_type"/>
+                            <field name="currency_id" groups="base.group_multi_currency"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                            <field name="branch_id"/>
+                            <field name="responsible_user_id"/>
+                        </group>
+                        <group string="Estado">
+                            <field name="current_balance_by_currency" widget="text" readonly="1"/>
+                            <field name="today_income_by_currency" widget="text" readonly="1"/>
+                            <field name="today_expense_by_currency" widget="text" readonly="1"/>
+                            <field name="balance_alert" invisible="not balance_alert"
+                                   widget="boolean" class="text-danger"/>
+                            <field name="current_session_id"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Diarios" name="journals">
+                            <field name="journal_ids">
+                                <list editable="bottom">
+                                    <field name="currency_id"/>
+                                    <field name="journal_id"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Límites y Aprobaciones" name="limits">
+                            <group>
+                                <group>
+                                    <field name="min_balance"/>
+                                    <field name="max_movement_amount"/>
+                                </group>
+                                <group>
+                                    <field name="require_approval_above"/>
+                                </group>
+                            </group>
+                        </page>
+                        <page string="Billetes/Monedas" name="bills">
+                            <field name="bill_ids" widget="many2many_tags"/>
+                            <p class="text-muted">
+                                Seleccione las denominaciones de billetes y monedas disponibles para el arqueo de esta caja.
+                                Si no selecciona ninguna, se usarán todas las denominaciones configuradas en el sistema.
+                            </p>
+                        </page>
+                        <page string="Secuencias" name="sequences"
+                              groups="base.group_no_one">
+                            <group>
+                                <field name="sequence_id"/>
+                                <field name="session_sequence_id"/>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!-- ============================================================ -->
+    <!-- Cash Box: List View -->
+    <!-- ============================================================ -->
+    <record id="treasury_cash_box_view_list" model="ir.ui.view">
+        <field name="name">treasury.cash.box.list</field>
+        <field name="model">treasury.cash.box</field>
+        <field name="arch" type="xml">
+            <list string="Cajas" decoration-muted="state == 'suspended'"
+                  decoration-info="state == 'draft'">
+                <field name="sequence" widget="handle"/>
+                <field name="code"/>
+                <field name="name"/>
+                <field name="box_type"/>
+                <field name="responsible_user_id" widget="many2one_avatar_user"/>
+                <field name="current_balance_by_currency" string="Saldo Actual"/>
+                <field name="balance_alert" column_invisible="True"/>
+                <field name="state" widget="badge"
+                       decoration-success="state == 'active'"
+                       decoration-info="state == 'draft'"
+                       decoration-danger="state == 'suspended'"/>
+                <field name="company_id" groups="base.group_multi_company"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- ============================================================ -->
+    <!-- Cash Box: Kanban View -->
+    <!-- ============================================================ -->
+    <record id="treasury_cash_box_view_kanban" model="ir.ui.view">
+        <field name="name">treasury.cash.box.kanban</field>
+        <field name="model">treasury.cash.box</field>
+        <field name="arch" type="xml">
+            <kanban class="o_kanban_dashboard" sample="1">
+                <field name="name"/>
+                <field name="code"/>
+                <field name="box_type"/>
+                <field name="state"/>
+                <field name="current_balance"/>
+                <field name="currency_id"/>
+                <field name="today_income"/>
+                <field name="today_expense"/>
+                <field name="current_balance_by_currency"/>
+                <field name="today_income_by_currency"/>
+                <field name="today_expense_by_currency"/>
+                <field name="balance_alert"/>
+                <field name="current_session_id"/>
+                <field name="session_count"/>
+                <field name="responsible_user_id"/>
+                <templates>
+                    <t t-name="card">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <strong><field name="name"/></strong>
+                                <span class="badge rounded-pill ms-2"
+                                      t-attf-class="#{record.state.raw_value == 'active' ? 'text-bg-success' : record.state.raw_value == 'draft' ? 'text-bg-info' : 'text-bg-danger'}">
+                                    <field name="state"/>
+                                </span>
+                            </div>
+                            <field name="responsible_user_id" widget="many2one_avatar_user"/>
+                        </div>
+                        <div class="mt-2">
+                            <span class="fw-bold">
+                                <field name="current_balance_by_currency"/>
+                            </span>
+                            <span t-if="record.balance_alert.raw_value"
+                                  class="badge text-bg-danger ms-2">
+                                ⚠ Saldo Bajo
+                            </span>
+                        </div>
+                        <div class="d-flex justify-content-between mt-2 text-muted small">
+                            <span>↑ <field name="today_income_by_currency"/></span>
+                            <span>↓ <field name="today_expense_by_currency"/></span>
+                        </div>
+                        <div class="mt-2">
+                            <span class="text-muted small">
+                                <field name="session_count"/> sesiones
+                            </span>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <!-- ============================================================ -->
+    <!-- Cash Box: Search View -->
+    <!-- ============================================================ -->
+    <record id="treasury_cash_box_view_search" model="ir.ui.view">
+        <field name="name">treasury.cash.box.search</field>
+        <field name="model">treasury.cash.box</field>
+        <field name="arch" type="xml">
+            <search string="Cajas">
+                <field name="name"/>
+                <field name="code"/>
+                <field name="responsible_user_id"/>
+                <filter string="Activas" name="filter_active" domain="[('state', '=', 'active')]"/>
+                <filter string="Borrador" name="filter_draft" domain="[('state', '=', 'draft')]"/>
+                <filter string="Suspendidas" name="filter_suspended" domain="[('state', '=', 'suspended')]"/>
+                <separator/>
+                <filter string="Saldo Bajo" name="filter_low_balance" domain="[('min_balance', '>', 0)]"/>
+                <separator/>
+                <filter string="Tesorería General" name="filter_general" domain="[('box_type', '=', 'general')]"/>
+                <filter string="Caja Chica" name="filter_petty" domain="[('box_type', '=', 'petty_cash')]"/>
+                <filter string="Fondo Fijo" name="filter_fixed" domain="[('box_type', '=', 'fixed_fund')]"/>
+                <group>
+                    <filter string="Tipo" name="group_type" context="{'group_by': 'box_type'}"/>
+                    <filter string="Estado" name="group_state" context="{'group_by': 'state'}"/>
+                    <filter string="Responsable" name="group_responsible" context="{'group_by': 'responsible_user_id'}"/>
+                    <filter string="Empresa" name="group_company" context="{'group_by': 'company_id'}" groups="base.group_multi_company"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- ============================================================ -->
+    <!-- Cash Box: Action -->
+    <!-- ============================================================ -->
+    <record id="treasury_cash_box_action" model="ir.actions.act_window">
+        <field name="name">Cajas</field>
+        <field name="res_model">treasury.cash.box</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="search_view_id" ref="treasury_cash_box_view_search"/>
+        <field name="context">{'search_default_filter_active': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Cree su primera Caja
+            </p>
+            <p>
+                Configure las cajas de su organización: tesorería general, caja chica o fondos fijos.
+            </p>
+        </field>
+    </record>
+
+</odoo>

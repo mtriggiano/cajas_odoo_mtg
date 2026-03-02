@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ============================================================ -->
+    <!-- Move: Form View -->
+    <!-- ============================================================ -->
+    <record id="treasury_cash_move_view_form" model="ir.ui.view">
+        <field name="name">treasury.cash.move.form</field>
+        <field name="model">treasury.cash.move</field>
+        <field name="arch" type="xml">
+            <form string="Movimiento de Caja">
+                <header>
+                    <button name="action_post" type="object"
+                            string="Contabilizar"
+                            class="btn-primary"
+                            invisible="state != 'draft'"/>
+                    <button name="action_approve" type="object"
+                            string="Aprobar"
+                            class="btn-warning"
+                            invisible="state != 'draft' or not requires_approval or approved_by"
+                            groups="treasury_cash.group_treasury_manager"/>
+                    <button name="action_cancel" type="object"
+                            string="Cancelar"
+                            invisible="state != 'posted'"
+                            confirm="¿Está seguro de que desea cancelar este movimiento? El asiento contable será revertido."/>
+                    <button name="action_print_voucher" type="object"
+                            string="Imprimir Comprobante"
+                            invisible="state != 'posted'"/>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="draft,posted"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_journal_entry" type="object"
+                                class="oe_stat_button" icon="fa-book"
+                                invisible="not account_move_id">
+                            <span class="o_stat_text">Asiento Contable</span>
+                        </button>
+                    </div>
+                    <widget name="web_ribbon" title="Requiere Aprobación" bg_color="text-bg-warning"
+                            invisible="not requires_approval or approved_by"/>
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1>
+                            <field name="name"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group string="Movimiento">
+                            <field name="move_type"/>
+                            <field name="amount"/>
+                            <field name="currency_id" groups="base.group_multi_currency"/>
+                            <field name="date"/>
+                            <field name="description"/>
+                        </group>
+                        <group string="Contabilidad">
+                            <field name="account_id"
+                                   options="{'no_create': True}"/>
+                            <field name="partner_id"/>
+                            <field name="invoice_id"
+                                   invisible="move_type != 'supplier_payment'"/>
+                            <field name="analytic_distribution"
+                                   widget="analytic_distribution"
+                                   groups="analytic.group_analytic_accounting"/>
+                        </group>
+                    </group>
+                    <group>
+                        <group string="Sesión">
+                            <field name="session_id"/>
+                            <field name="box_id"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                        </group>
+                        <group string="Aprobación" invisible="not requires_approval">
+                            <field name="requires_approval"/>
+                            <field name="approved_by" widget="many2one_avatar_user"/>
+                            <field name="approved_date"/>
+                        </group>
+                    </group>
+                    <group string="Adjuntos">
+                        <field name="attachment_ids" widget="many2many_binary"/>
+                    </group>
+                    <group invisible="not account_move_id and not payment_id and not transfer_id">
+                        <group string="Registros Vinculados">
+                            <field name="account_move_id" invisible="not account_move_id"/>
+                            <field name="payment_id" invisible="not payment_id"/>
+                            <field name="transfer_id" invisible="not transfer_id"/>
+                        </group>
+                    </group>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!-- ============================================================ -->
+    <!-- Move: List View -->
+    <!-- ============================================================ -->
+    <record id="treasury_cash_move_view_list" model="ir.ui.view">
+        <field name="name">treasury.cash.move.list</field>
+        <field name="model">treasury.cash.move</field>
+        <field name="arch" type="xml">
+            <list string="Movimientos de Caja"
+                  decoration-muted="state == 'cancelled'"
+                  decoration-success="state == 'posted'"
+                  decoration-info="state == 'draft'">
+                <field name="name"/>
+                <field name="date"/>
+                <field name="box_id" optional="hide"/>
+                <field name="session_id" optional="hide"/>
+                <field name="move_type"/>
+                <field name="description"/>
+                <field name="partner_id" optional="show"/>
+                <field name="account_id"/>
+                <field name="amount" widget="monetary" sum="Total"/>
+                <field name="currency_id" column_invisible="True"/>
+                <field name="requires_approval" optional="hide"/>
+                <field name="approved_by" optional="hide" widget="many2one_avatar_user"/>
+                <field name="attachment_count" optional="hide"/>
+                <field name="state" widget="badge"
+                       decoration-success="state == 'posted'"
+                       decoration-info="state == 'draft'"
+                       decoration-danger="state == 'cancelled'"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- ============================================================ -->
+    <!-- Move: Search View -->
+    <!-- ============================================================ -->
+    <record id="treasury_cash_move_view_search" model="ir.ui.view">
+        <field name="name">treasury.cash.move.search</field>
+        <field name="model">treasury.cash.move</field>
+        <field name="arch" type="xml">
+            <search string="Movimientos de Caja">
+                <field name="name"/>
+                <field name="description"/>
+                <field name="partner_id"/>
+                <field name="account_id"/>
+                <field name="box_id"/>
+                <filter string="Borrador" name="filter_draft" domain="[('state', '=', 'draft')]"/>
+                <filter string="Contabilizados" name="filter_posted" domain="[('state', '=', 'posted')]"/>
+                <filter string="Cancelados" name="filter_cancelled" domain="[('state', '=', 'cancelled')]"/>
+                <separator/>
+                <filter string="Ingresos" name="filter_income" domain="[('move_type', '=', 'income')]"/>
+                <filter string="Egresos" name="filter_expense" domain="[('move_type', '=', 'expense')]"/>
+                <filter string="Transferencias" name="filter_transfers" domain="[('move_type', 'in', ('transfer_in', 'transfer_out'))]"/>
+                <filter string="Pagos a Proveedores" name="filter_supplier" domain="[('move_type', '=', 'supplier_payment')]"/>
+                <filter string="Operaciones Bancarias" name="filter_bank" domain="[('move_type', 'in', ('bank_deposit', 'bank_withdrawal'))]"/>
+                <filter string="Ajustes" name="filter_adjustments" domain="[('move_type', '=', 'adjustment')]"/>
+                <separator/>
+                <filter string="Pendientes de Aprobación" name="filter_pending_approval"
+                        domain="[('requires_approval', '=', True), ('approved_by', '=', False)]"/>
+                <separator/>
+                <filter string="Hoy" name="filter_today" date="date"/>
+                <filter string="Esta Semana" name="filter_week" date="date"/>
+                <filter string="Este Mes" name="filter_month" date="date"/>
+                <group>
+                    <filter string="Tipo" name="group_type" context="{'group_by': 'move_type'}"/>
+                    <filter string="Caja" name="group_box" context="{'group_by': 'box_id'}"/>
+                    <filter string="Sesión" name="group_session" context="{'group_by': 'session_id'}"/>
+                    <filter string="Cuenta" name="group_account" context="{'group_by': 'account_id'}"/>
+                    <filter string="Contacto" name="group_partner" context="{'group_by': 'partner_id'}"/>
+                    <filter string="Fecha" name="group_date" context="{'group_by': 'date:day'}"/>
+                    <filter string="Estado" name="group_state" context="{'group_by': 'state'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- ============================================================ -->
+    <!-- Move: Actions -->
+    <!-- ============================================================ -->
+    <record id="treasury_cash_move_action" model="ir.actions.act_window">
+        <field name="name">Movimientos</field>
+        <field name="res_model">treasury.cash.move</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="treasury_cash_move_view_search"/>
+        <field name="context">{'search_default_filter_posted': 1, 'create': False}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Aún no hay movimientos
+            </p>
+            <p>
+                Los movimientos se crean dentro de una sesión abierta desde una Caja.
+            </p>
+        </field>
+    </record>
+
+</odoo>

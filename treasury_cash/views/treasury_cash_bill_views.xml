@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ============================================================ -->
+    <!-- Bill: List View (editable) -->
+    <!-- ============================================================ -->
+    <record id="treasury_cash_bill_view_list" model="ir.ui.view">
+        <field name="name">treasury.cash.bill.list</field>
+        <field name="model">treasury.cash.bill</field>
+        <field name="arch" type="xml">
+            <list string="Billetes y Monedas" editable="bottom">
+                <field name="value"/>
+                <field name="currency_id"/>
+                <field name="name" column_invisible="True"/>
+                <field name="box_ids" widget="many2many_tags" optional="show"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- ============================================================ -->
+    <!-- Bill: Form View -->
+    <!-- ============================================================ -->
+    <record id="treasury_cash_bill_view_form" model="ir.ui.view">
+        <field name="name">treasury.cash.bill.form</field>
+        <field name="model">treasury.cash.bill</field>
+        <field name="arch" type="xml">
+            <form string="Billete/Moneda">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="value"/>
+                            <field name="currency_id"/>
+                        </group>
+                        <group>
+                            <field name="box_ids" widget="many2many_tags"/>
+                            <field name="active" invisible="True"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- ============================================================ -->
+    <!-- Bill: Action -->
+    <!-- ============================================================ -->
+    <record id="treasury_cash_bill_action" model="ir.actions.act_window">
+        <field name="name">Billetes y Monedas</field>
+        <field name="res_model">treasury.cash.bill</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Configure las denominaciones de billetes y monedas
+            </p>
+            <p>
+                Defina los valores de billetes y monedas por divisa para el conteo de efectivo en apertura y cierre de sesiones.
+            </p>
+        </field>
+    </record>
+
+</odoo>

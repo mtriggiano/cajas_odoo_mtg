@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Denomination views are primarily used inline in the session form.
+         This file provides a standalone list view for configuration reference. -->
+
+    <record id="treasury_cash_denomination_view_list" model="ir.ui.view">
+        <field name="name">treasury.cash.denomination.list</field>
+        <field name="model">treasury.cash.denomination</field>
+        <field name="arch" type="xml">
+            <list string="Líneas de Arqueo" editable="bottom">
+                <field name="session_id"/>
+                <field name="count_type"/>
+                <field name="currency_id"/>
+                <field name="denomination"/>
+                <field name="quantity"/>
+                <field name="subtotal"/>
+            </list>
+        </field>
+    </record>
+
+</odoo>
