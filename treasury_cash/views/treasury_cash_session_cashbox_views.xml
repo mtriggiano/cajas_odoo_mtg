@@ -60,6 +60,14 @@
                                             string="Contabilizar" icon="fa-check"
                                             class="btn-link text-success"
                                             invisible="state != 'draft'"/>
+                                    <button name="action_print_voucher" type="object"
+                                            string="Ver Comprobante" icon="fa-file-text-o"
+                                            class="btn-link"
+                                            invisible="state != 'posted'"/>
+                                    <button name="action_download_voucher_pdf" type="object"
+                                            string="Imprimir Recibo" icon="fa-print"
+                                            class="btn-link"
+                                            invisible="state != 'posted'"/>
                                 </list>
                             </field>
                         </page>
