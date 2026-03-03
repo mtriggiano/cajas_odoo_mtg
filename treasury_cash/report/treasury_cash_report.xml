@@ -14,6 +14,14 @@
         <field name="binding_type">report</field>
     </record>
 
+    <record id="action_report_move_voucher_pdf" model="ir.actions.report">
+        <field name="name">Comprobante de Movimiento (PDF)</field>
+        <field name="model">treasury.cash.move</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">treasury_cash.report_move_voucher</field>
+        <field name="report_file">treasury_cash.report_move_voucher</field>
+    </record>
+
     <!-- ============================================================ -->
     <!-- Session Closing Report -->
     <!-- ============================================================ -->

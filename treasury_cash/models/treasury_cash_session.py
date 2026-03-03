@@ -148,6 +148,30 @@ class TreasuryCashSession(models.Model):
         currency_field='currency_id',
         compute='_compute_move_totals',
     )
+    opening_balance_by_currency = fields.Text(
+        string='Saldo Inicial por Divisa',
+        compute='_compute_balance_summary_by_currency',
+    )
+    total_income_by_currency = fields.Text(
+        string='Ingresos por Divisa',
+        compute='_compute_balance_summary_by_currency',
+    )
+    total_expense_by_currency = fields.Text(
+        string='Egresos por Divisa',
+        compute='_compute_balance_summary_by_currency',
+    )
+    closing_balance_theoretical_by_currency = fields.Text(
+        string='Saldo Teórico por Divisa',
+        compute='_compute_balance_summary_by_currency',
+    )
+    closing_balance_real_by_currency = fields.Text(
+        string='Saldo Real por Divisa',
+        compute='_compute_balance_summary_by_currency',
+    )
+    difference_by_currency = fields.Text(
+        string='Diferencia por Divisa',
+        compute='_compute_balance_summary_by_currency',
+    )
 
     # Integrity
     integrity_hash = fields.Char(
@@ -302,6 +326,40 @@ class TreasuryCashSession(models.Model):
                 m.amount for m in posted_moves
                 if m.move_type in ('expense', 'transfer_out', 'supplier_payment', 'bank_deposit')
             )
+
+    @api.depends(
+        'cashbox_ids.currency_id',
+        'cashbox_ids.opening_amount',
+        'cashbox_ids.total_income',
+        'cashbox_ids.total_expense',
+        'cashbox_ids.closing_amount_theoretical',
+        'cashbox_ids.closing_amount',
+        'cashbox_ids.difference',
+    )
+    def _compute_balance_summary_by_currency(self):
+        for session in self:
+            opening_lines = []
+            income_lines = []
+            expense_lines = []
+            theoretical_lines = []
+            real_lines = []
+            diff_lines = []
+
+            for cb in session.cashbox_ids.sorted(key=lambda c: c.currency_id.name):
+                currency = cb.currency_id
+                opening_lines.append('%s: %s' % (currency.name, currency.format(cb.opening_amount or 0.0)))
+                income_lines.append('%s: %s' % (currency.name, currency.format(cb.total_income or 0.0)))
+                expense_lines.append('%s: %s' % (currency.name, currency.format(cb.total_expense or 0.0)))
+                theoretical_lines.append('%s: %s' % (currency.name, currency.format(cb.closing_amount_theoretical or 0.0)))
+                real_lines.append('%s: %s' % (currency.name, currency.format(cb.closing_amount or 0.0)))
+                diff_lines.append('%s: %s' % (currency.name, currency.format(cb.difference or 0.0)))
+
+            session.opening_balance_by_currency = '\n'.join(opening_lines) if opening_lines else '-'
+            session.total_income_by_currency = '\n'.join(income_lines) if income_lines else '-'
+            session.total_expense_by_currency = '\n'.join(expense_lines) if expense_lines else '-'
+            session.closing_balance_theoretical_by_currency = '\n'.join(theoretical_lines) if theoretical_lines else '-'
+            session.closing_balance_real_by_currency = '\n'.join(real_lines) if real_lines else '-'
+            session.difference_by_currency = '\n'.join(diff_lines) if diff_lines else '-'
 
     def action_start_closing(self):
         self.ensure_one()

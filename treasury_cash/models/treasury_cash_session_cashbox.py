@@ -152,6 +152,7 @@ class TreasuryCashSessionCashbox(models.Model):
             'target': 'current',
             'context': {
                 'form_view_ref': 'treasury_cash.treasury_cash_session_cashbox_view_form',
+                'create': False,
             },
         }
 

@@ -24,7 +24,10 @@
                             invisible="state != 'posted'"
                             confirm="¿Está seguro de que desea cancelar este movimiento? El asiento contable será revertido."/>
                     <button name="action_print_voucher" type="object"
-                            string="Imprimir Comprobante"
+                            string="Ver Comprobante"
+                            invisible="state != 'posted'"/>
+                    <button name="action_download_voucher_pdf" type="object"
+                            string="Descargar PDF"
                             invisible="state != 'posted'"/>
                     <field name="state" widget="statusbar"
                            statusbar_visible="draft,posted"/>
@@ -120,6 +123,16 @@
                        decoration-success="state == 'posted'"
                        decoration-info="state == 'draft'"
                        decoration-danger="state == 'cancelled'"/>
+                <button name="action_print_voucher" type="object"
+                        string="Comprobante"
+                        icon="fa-file-text-o"
+                        class="btn-link"
+                        invisible="state != 'posted'"/>
+                <button name="action_download_voucher_pdf" type="object"
+                        string="PDF"
+                        icon="fa-download"
+                        class="btn-link"
+                        invisible="state != 'posted'"/>
             </list>
         </field>
     </record>

@@ -42,7 +42,7 @@
                         <group string="Configuración">
                             <field name="code"/>
                             <field name="box_type"/>
-                            <field name="currency_id" groups="base.group_multi_currency"/>
+                            <field name="currency_id" groups="base.group_multi_currency" context="{'active_test': False}"/>
                             <field name="company_id" groups="base.group_multi_company"/>
                             <field name="branch_id"/>
                             <field name="responsible_user_id"/>
@@ -60,7 +60,7 @@
                         <page string="Diarios" name="journals">
                             <field name="journal_ids">
                                 <list editable="bottom">
-                                    <field name="currency_id"/>
+                                    <field name="currency_id" context="{'active_test': False}"/>
                                     <field name="journal_id"/>
                                 </list>
                             </field>
@@ -158,17 +158,21 @@
                             <field name="responsible_user_id" widget="many2one_avatar_user"/>
                         </div>
                         <div class="mt-2">
-                            <span class="fw-bold">
-                                <field name="current_balance_by_currency"/>
-                            </span>
+                            <div class="fw-bold small" style="white-space: pre-line; line-height: 1.35;">
+                                <field name="current_balance_by_currency" widget="text"/>
+                            </div>
                             <span t-if="record.balance_alert.raw_value"
                                   class="badge text-bg-danger ms-2">
                                 ⚠ Saldo Bajo
                             </span>
                         </div>
-                        <div class="d-flex justify-content-between mt-2 text-muted small">
-                            <span>↑ <field name="today_income_by_currency"/></span>
-                            <span>↓ <field name="today_expense_by_currency"/></span>
+                        <div class="mt-2 text-muted small">
+                            <div class="mb-1" style="white-space: pre-line; line-height: 1.3;">
+                                ↑ <field name="today_income_by_currency" widget="text"/>
+                            </div>
+                            <div style="white-space: pre-line; line-height: 1.3;">
+                                ↓ <field name="today_expense_by_currency" widget="text"/>
+                            </div>
                         </div>
                         <div class="mt-2">
                             <span class="text-muted small">

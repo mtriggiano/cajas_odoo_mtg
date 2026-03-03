@@ -219,14 +219,24 @@ class TreasuryCashBox(models.Model):
             session = box.current_session_id
             if session:
                 for cb in session.cashbox_ids.sorted(key=lambda c: c.currency_id.name):
-                    balance_lines.append('%s: %s' % (cb.currency_id.name, cb.closing_amount_theoretical))
+                    balance_lines.append(
+                        '%s: %s' % (
+                            cb.currency_id.name,
+                            cb.currency_id.format(cb.closing_amount_theoretical or 0.0),
+                        )
+                    )
             else:
                 last_session = self.env['treasury.cash.session'].search([
                     ('box_id', '=', box.id),
                     ('state', '=', 'closed'),
                 ], limit=1, order='stop_at desc')
                 for cb in last_session.cashbox_ids.sorted(key=lambda c: c.currency_id.name):
-                    balance_lines.append('%s: %s' % (cb.currency_id.name, cb.closing_amount or 0.0))
+                    balance_lines.append(
+                        '%s: %s' % (
+                            cb.currency_id.name,
+                            cb.currency_id.format(cb.closing_amount or 0.0),
+                        )
+                    )
 
             # Daily totals by currency
             moves = self.env['treasury.cash.move'].search([
@@ -247,8 +257,8 @@ class TreasuryCashBox(models.Model):
                     m.amount for m in cmoves
                     if m.move_type in ('expense', 'transfer_out', 'supplier_payment', 'bank_deposit')
                 )
-                income_lines.append('%s: %s' % (currency.name, income))
-                expense_lines.append('%s: %s' % (currency.name, expense))
+                income_lines.append('%s: %s' % (currency.name, currency.format(income or 0.0)))
+                expense_lines.append('%s: %s' % (currency.name, currency.format(expense or 0.0)))
 
             box.current_balance_by_currency = '\n'.join(balance_lines) if balance_lines else '-'
             box.today_income_by_currency = '\n'.join(income_lines) if income_lines else '-'

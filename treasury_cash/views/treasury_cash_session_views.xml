@@ -60,16 +60,16 @@
                             <field name="currency_id" groups="base.group_multi_currency"/>
                         </group>
                         <group string="Saldos" invisible="state == 'opening_control'">
-                            <field name="opening_balance" widget="monetary"/>
-                            <field name="total_income" widget="monetary" class="text-success"/>
-                            <field name="total_expense" widget="monetary" class="text-danger"/>
-                            <field name="closing_balance_theoretical" widget="monetary"/>
-                            <field name="closing_balance_real" widget="monetary"
-                                   invisible="state in ('opening_control', 'opened')"
-                                   readonly="state == 'closed'"/>
-                            <field name="difference" widget="monetary"
-                                   invisible="state in ('opening_control', 'opened')"
-                                   decoration-danger="difference != 0"/>
+                            <field name="opening_balance_by_currency" widget="text" readonly="1"/>
+                            <field name="total_income_by_currency" widget="text" readonly="1" class="text-success"/>
+                            <field name="total_expense_by_currency" widget="text" readonly="1" class="text-danger"/>
+                            <field name="closing_balance_theoretical_by_currency" widget="text" readonly="1"/>
+                            <field name="closing_balance_real_by_currency" widget="text"
+                                   readonly="1"
+                                   invisible="state in ('opening_control', 'opened')"/>
+                            <field name="difference_by_currency" widget="text"
+                                   readonly="1"
+                                   invisible="state in ('opening_control', 'opened')"/>
                         </group>
                     </group>
 
@@ -77,7 +77,7 @@
                         <!-- Opening: Cashbox lines per currency -->
                         <page string="Apertura" name="opening"
                               invisible="state != 'opening_control'">
-                            <field name="cashbox_ids">
+                            <field name="cashbox_ids" options="{'no_open': True}">
                                 <list editable="bottom">
                                     <field name="currency_id" readonly="1"/>
                                     <field name="suggested_opening" widget="monetary"/>
@@ -94,7 +94,7 @@
                         <!-- Cajas por Divisa (visible after opening) — each opens its own form with moves -->
                         <page string="Cajas / Movimientos" name="cashbox_moves"
                               invisible="state == 'opening_control'">
-                            <field name="cashbox_ids" readonly="state == 'closed'">
+                            <field name="cashbox_ids" readonly="state == 'closed'" options="{'no_open': True}">
                                 <list>
                                     <field name="currency_id" readonly="1"/>
                                     <field name="opening_amount" readonly="1"/>
@@ -115,7 +115,8 @@
                                 Realice el conteo final por divisa. El sistema compara el contado contra el saldo teórico esperado.
                             </div>
                             <field name="cashbox_ids"
-                                   readonly="state == 'closed'">
+                                   readonly="state == 'closed'"
+                                   options="{'no_open': True}">
                                 <list editable="bottom">
                                     <field name="currency_id" readonly="1"/>
                                     <field name="opening_amount" widget="monetary" readonly="1"/>
@@ -179,11 +180,10 @@
                 <field name="user_id" widget="many2one_avatar_user"/>
                 <field name="start_at"/>
                 <field name="stop_at"/>
-                <field name="opening_balance" widget="monetary"/>
-                <field name="closing_balance_theoretical" widget="monetary" optional="show"/>
-                <field name="closing_balance_real" widget="monetary" optional="show"/>
-                <field name="difference" widget="monetary"
-                       decoration-danger="difference != 0"/>
+                <field name="opening_balance_by_currency" string="Saldo Inicial"/>
+                <field name="closing_balance_theoretical_by_currency" string="Saldo Teórico" optional="show"/>
+                <field name="closing_balance_real_by_currency" string="Saldo Real" optional="show"/>
+                <field name="difference_by_currency" string="Diferencia"/>
                 <field name="currency_id" column_invisible="True"/>
                 <field name="move_count"/>
                 <field name="state" widget="badge"

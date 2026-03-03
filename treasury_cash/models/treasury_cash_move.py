@@ -73,7 +73,8 @@ class TreasuryCashMove(models.Model):
         check_company=True,
         domain="[('account_type', 'in', "
                "('expense', 'expense_direct_cost', 'income', 'income_other', "
-               "'asset_current', 'liability_current', 'asset_cash'))]",
+               "'asset_current', 'liability_current', 'asset_cash')), "
+               "('currency_id', 'in', [False, currency_id])]",
         help='Cuenta contrapartida para este movimiento. '
              'La cuenta de caja se determina automáticamente del diario.',
     )
@@ -287,6 +288,13 @@ class TreasuryCashMove(models.Model):
             raise UserError(
                 _('No hay cuenta predeterminada configurada en el diario "%s".', journal.name)
             )
+        if cash_account.currency_id and cash_account.currency_id != self.currency_id:
+            raise UserError(
+                _('La cuenta de caja "%s" del diario "%s" está forzada a la divisa %s. '
+                  'Debe usar una cuenta sin divisa fija o con la divisa del movimiento (%s).',
+                  cash_account.display_name, journal.name,
+                  cash_account.currency_id.name, self.currency_id.name)
+            )
 
         # Counterpart: explicit account or journal suspense account (pending reconciliation)
         counterpart_account = self.account_id
@@ -297,6 +305,14 @@ class TreasuryCashMove(models.Model):
                     _('No hay cuenta de suspensión configurada en el diario "%s". '
                       'Configure una cuenta contrapartida o una cuenta de suspensión.', journal.name)
                 )
+        if counterpart_account.currency_id and counterpart_account.currency_id != self.currency_id:
+            raise UserError(
+                _('La cuenta contrapartida "%s" está forzada a la divisa %s. '
+                  'Para este movimiento en %s, use una cuenta sin divisa fija o con la misma divisa.',
+                  counterpart_account.display_name,
+                  counterpart_account.currency_id.name,
+                  self.currency_id.name)
+            )
 
         # Determine debit/credit based on move type
         if self.move_type in ('income', 'transfer_in', 'bank_withdrawal'):
@@ -415,3 +431,7 @@ class TreasuryCashMove(models.Model):
     def action_print_voucher(self):
         self.ensure_one()
         return self.env.ref('treasury_cash.action_report_move_voucher').report_action(self)
+
+    def action_download_voucher_pdf(self):
+        self.ensure_one()
+        return self.env.ref('treasury_cash.action_report_move_voucher_pdf').report_action(self)
