@@ -28,6 +28,7 @@ htmlcov/
 .mypy_cache/
 .pyre/
 .ruff_cache/
+api_dev_impersonation/
 
 # Odoo generated / runtime
 *.log

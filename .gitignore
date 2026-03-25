@@ -1,0 +1,63 @@
+# =============================
+# Odoo / API-DEV safe defaults
+# =============================
+
+# Python
+__pycache__/
+*.py[cod]
+*.so
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+
+# Virtualenvs / tooling
+venv/
+.env
+.env.*
+node_modules/
+
+# Odoo runtime / generated
+*.log
+*.pid
+*.sock
+sessions/
+filestore/
+.backup/
+*.rml
+*.rmlc
+
+# Odoo assets/cache
+/web/assets/*
+/static/*/dist/
+
+# Local instance data and scripts outputs
+*.dump
+*.sql
+*.zip
+*.tar
+*.tar.gz
+*.bak
+*.tmp
+
+# IDE/editor
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Secrets / keys
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+secrets/
+
+# API-DEV / deployment internals
+/tmp/
+logs/
+coverage/
+
+# API-DEV operational addon (deployed by scripts, not per-instance source)
+api_dev_impersonation/
